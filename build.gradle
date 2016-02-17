@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
 	compile 'com.google.guava:guava:18.0'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:4.1.2.201602141800-r'
 
 	testCompile 'junit:junit:4.12'
 	testCompile 'org.assertj:assertj-core:3.3.0'
