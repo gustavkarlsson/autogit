@@ -6,6 +6,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.*;
@@ -13,6 +14,8 @@ import static java.util.Collections.*;
 import static java.util.stream.Collectors.*;
 
 public class PlainFileRepositories implements Repositories {
+
+	public static final String COMMENT_PREFIX = "#";
 
 	private final Path file;
 
@@ -23,7 +26,8 @@ public class PlainFileRepositories implements Repositories {
 	@Override
 	public List<Path> get() throws RepositoriesIOException, RepositoriesInvalidPathException {
 		try {
-			return unmodifiableList(read());
+			List<Path> read = read();
+			return unmodifiableList(read);
 		} catch (IOException e) {
 			throw new RepositoriesIOException(e);
 		} catch (InvalidPathException e) {
@@ -33,8 +37,20 @@ public class PlainFileRepositories implements Repositories {
 
 	private List<Path> read() throws IOException {
 		try (Stream<String> stream = Files.lines(file)) {
-			return stream.map(s -> Paths.get(s)).collect(toList());
+			return  stream.map(PlainFileRepositories::parsePath)
+					.filter(Optional::isPresent)
+					.map(Optional::get)
+					.collect(toList());
 		}
+	}
+
+	private static Optional<Path> parsePath(String line) {
+		String trimmed = line.trim();
+		if (trimmed.isEmpty() || trimmed.startsWith(COMMENT_PREFIX)) {
+			return Optional.empty();
+		}
+		Path path = Paths.get(trimmed);
+		return Optional.of(path);
 	}
 
 	@Override

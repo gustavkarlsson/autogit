@@ -5,8 +5,11 @@ import com.google.common.jimfs.Jimfs;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.createFile;
@@ -65,6 +68,38 @@ public class PlainFileRepositoriesTest {
 		PlainFileRepositories repos = new PlainFileRepositories(directory);
 
 		repos.get();
+	}
+
+	@Test
+	public void getWithSinglePathReturnsPath() throws Exception {
+		PlainFileRepositories repos = new PlainFileRepositories(file);
+		String path = "/home/user/project";
+
+		writeToFile(path);
+
+		assertThat(repos.get()).containsExactly(Paths.get(path));
+	}
+
+	@Test(expected = RepositoriesInvalidPathException.class)
+	public void getWithMalformedPathThrowsRepositoriesInvalidPathException() throws Exception {
+		PlainFileRepositories repos = new PlainFileRepositories(file);
+
+		writeToFile(" *\\/:*.\u0000' ");
+
+		repos.get();
+	}
+
+	@Test
+	public void getWithSingleCommentedOutLineReturnsEmptyList() throws Exception {
+		PlainFileRepositories repos = new PlainFileRepositories(file);
+
+		writeToFile("#/file");
+
+		assertThat(repos.get()).isEmpty();
+	}
+
+	private void writeToFile(String string) throws IOException {
+		Files.write(file, string.getBytes());
 	}
 
 
