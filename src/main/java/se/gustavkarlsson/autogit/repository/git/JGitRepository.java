@@ -42,6 +42,7 @@ public class JGitRepository implements Repository {
 
 	@Override
 	public void save(String author) {
+		checkNotNull(author);
 		try {
 			addAll();
 			commitAll(author);
