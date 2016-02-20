@@ -31,8 +31,8 @@ public class JGitRepository implements Repository {
 
 	private static org.eclipse.jgit.lib.Repository getRepository(Path path) throws IOException {
 		try {
-			FileRepositoryBuilder builder = new FileRepositoryBuilder();
-			return builder.setGitDir(path.toFile())
+			return new FileRepositoryBuilder()
+					.setWorkTree(path.toFile())
 					.setMustExist(true)
 					.build();
 		} catch (RepositoryNotFoundException e) {
