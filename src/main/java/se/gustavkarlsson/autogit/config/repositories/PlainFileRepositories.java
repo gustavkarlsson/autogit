@@ -7,15 +7,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.*;
-import static java.util.Collections.*;
-import static java.util.stream.Collectors.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toSet;
 
 public class PlainFileRepositories implements Repositories {
-
-	public static final String COMMENT_PREFIX = "#";
 
 	private final Path file;
 
@@ -24,10 +24,9 @@ public class PlainFileRepositories implements Repositories {
 	}
 
 	@Override
-	public List<Path> get() throws RepositoriesIOException, RepositoriesInvalidPathException {
+	public Set<Path> get() throws RepositoriesIOException, RepositoriesInvalidPathException {
 		try {
-			List<Path> read = read();
-			return unmodifiableList(read);
+			return unmodifiableSet(read());
 		} catch (IOException e) {
 			throw new RepositoriesIOException(e);
 		} catch (InvalidPathException e) {
@@ -35,27 +34,48 @@ public class PlainFileRepositories implements Repositories {
 		}
 	}
 
-	private List<Path> read() throws IOException {
+	@Override
+	public boolean add(Path path) throws RepositoriesIOException, RepositoriesInvalidPathException {
+		try {
+			Set<Path> paths = read();
+			if (paths.contains(path)) {
+				return false;
+			}
+			paths.add(path);
+			write(paths);
+			return true;
+		} catch (IOException e) {
+			throw new RepositoriesIOException(e);
+		} catch (InvalidPathException e) {
+			throw new RepositoriesInvalidPathException(e);
+		}
+	}
+
+	private Set<Path> read() throws IOException {
 		try (Stream<String> stream = Files.lines(file)) {
-			return  stream.map(PlainFileRepositories::parsePath)
+			return stream.map(PlainFileRepositories::parsePath)
 					.filter(Optional::isPresent)
 					.map(Optional::get)
-					.collect(toList());
+					.collect(toSet());
 		}
 	}
 
 	private static Optional<Path> parsePath(String line) {
 		String trimmed = line.trim();
-		if (trimmed.isEmpty() || trimmed.startsWith(COMMENT_PREFIX)) {
+		if (trimmed.isEmpty()) {
 			return Optional.empty();
 		}
 		Path path = Paths.get(trimmed);
 		return Optional.of(path);
 	}
 
-	@Override
-	public boolean add(Path path) {
-		return false;
+	private void write(Set<Path> paths) throws IOException {
+		List<String> pathStrings = paths.stream()
+				.map(Path::toAbsolutePath)
+				.map(Path::toString)
+				.collect(Collectors.toList());
+
+		Files.write(file, pathStrings);
 	}
 
 	@Override

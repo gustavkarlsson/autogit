@@ -90,12 +90,23 @@ public class PlainFileRepositoriesTest {
 	}
 
 	@Test
-	public void getWithSingleCommentedOutLineReturnsEmptyList() throws Exception {
+	public void getWithMidLineCommentSymbolReturnsPath() throws Exception {
 		PlainFileRepositories repos = new PlainFileRepositories(file);
+		Path path = Paths.get("/file # A comment").toAbsolutePath();
 
-		writeToFile("#/file");
+		writeToFile(path.toString());
 
-		assertThat(repos.get()).isEmpty();
+		assertThat(repos.get()).containsExactly(path);
+	}
+
+	@Test
+	public void addMakesItContainPath() throws Exception {
+		PlainFileRepositories repos = new PlainFileRepositories(file);
+		Path path = Paths.get("somewhere").toAbsolutePath();
+
+		repos.add(path);
+
+		assertThat(repos.get()).containsExactly(path);
 	}
 
 	private void writeToFile(String string) throws IOException {
