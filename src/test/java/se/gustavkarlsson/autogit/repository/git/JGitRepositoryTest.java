@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import se.gustavkarlsson.autogit.repository.NoRepositoryException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -141,18 +142,24 @@ public class JGitRepositoryTest {
 		try {
 			Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
 				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					Files.delete(file);
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+					attemptToDelete(file);
 					return FileVisitResult.CONTINUE;
 				}
 
 				@Override
-				public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-					if (e == null) {
-						Files.delete(dir);
+				public FileVisitResult postVisitDirectory(Path dir, IOException exception) throws IOException {
+					if (exception == null) {
+						attemptToDelete(dir);
 						return FileVisitResult.CONTINUE;
 					}
-					throw e;
+					throw exception;
+				}
+
+				private void attemptToDelete(Path path) throws IOException {
+					if (!path.toFile().delete()) {
+                        Files.delete(path);
+                    }
 				}
 			});
 		} catch (IOException e) {

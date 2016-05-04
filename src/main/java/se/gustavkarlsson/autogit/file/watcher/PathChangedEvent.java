@@ -12,6 +12,10 @@ public final class PathChangedEvent {
 		this.path = checkNotNull(path);
 	}
 
+	public Path getPath() {
+		return path;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
