@@ -17,7 +17,7 @@ public class Main {
 		Path repositoriesFile = config.getRepositoriesFile();
 
 		Saver saver = new Saver(config.getUserName());
-		Repositories repositories = new PlainFileRepositories(repositoriesFile);
+		Repositories<Path> repositories = new PlainFileRepositories(repositoriesFile);
 		repositories.get().forEach(saver::register);
 	}
 }

@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toSet;
 
-public class PlainFileRepositories implements Repositories {
+public class PlainFileRepositories implements Repositories<Path> {
 
 	private final Path file;
 
