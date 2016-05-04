@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class NativeFileWatcherTest {
 
-	private FileSystem fileSystem;
 	private Path path;
 	private EventBus eventBus;
 	private EventHandler eventHandler;
@@ -32,7 +31,7 @@ public class NativeFileWatcherTest {
 	public void setUp() throws Exception {
 		Configuration configuration = unix().toBuilder()
 				.setWatchServiceConfiguration(WatchServiceConfiguration.polling(10, TimeUnit.MILLISECONDS)).build();
-		fileSystem = newFileSystem(configuration);
+		FileSystem fileSystem = newFileSystem(configuration);
 		path = fileSystem.getPath(".");
 		eventBus = new EventBus();
 		eventHandler = new EventHandler();
