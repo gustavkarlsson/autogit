@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 import se.gustavkarlsson.autogit.repository.NoRepositoryException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
