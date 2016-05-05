@@ -5,10 +5,7 @@ import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import se.gustavkarlsson.autogit.repository.NoRepositoryException;
-import se.gustavkarlsson.autogit.repository.Repository;
-import se.gustavkarlsson.autogit.repository.RepositoryException;
+import se.gustavkarlsson.autogit.repository.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,21 +19,43 @@ public class JGitRepository implements Repository {
 
 	private final Git git;
 
-	public JGitRepository(Path path) throws IOException {
-		checkNotNull(path);
-
-		org.eclipse.jgit.lib.Repository repository = getRepository(path);
-		git = new Git(repository);
+	public static JGitRepository open(Path gitDir) {
+		checkNotNull(gitDir);
+		return new JGitRepository(gitDir);
 	}
 
-	private static org.eclipse.jgit.lib.Repository getRepository(Path path) throws IOException {
+	public static JGitRepository init(Path gitDir, Path workDir) {
+		checkNotNull(gitDir);
+		checkNotNull(workDir);
+		return new JGitRepository(gitDir, workDir);
+	}
+
+	private JGitRepository(Path gitDir) {
 		try {
-			return new FileRepositoryBuilder()
-					.setWorkTree(path.toFile())
-					.setMustExist(true)
-					.build();
+			git = Git.open(gitDir.toFile());
 		} catch (RepositoryNotFoundException e) {
-			throw new NoRepositoryException(e);
+			throw new NoGitDirectoryException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private JGitRepository(Path gitDir, Path workDir) {
+		try {
+			try {
+				Git.open(gitDir.toFile());
+				throw new GitDirectoryInUseException();
+			} catch (IOException e) {
+				// Exception expected here.
+			}
+			git = Git.init().setGitDir(gitDir.toFile()).setDirectory(workDir.toFile()).call();
+		} catch (GitAPIException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalStateException e) {
+			if (e.getMessage().contains("both folders should not point to the same location")) {
+				throw new SameGitAndWorkingDirectoryException(e);
+			}
+			throw e;
 		}
 	}
 

@@ -29,13 +29,13 @@ public class Saver {
 		this.author = checkNotNull(author);
 	}
 
-	public void register(Path repositoryPath) {
+	public void register(Path gitDir) {
 		try {
-			Repository repository = new JGitRepository(repositoryPath);
-			repositories.put(repositoryPath, repository);
-			watcher.watch(repositoryPath);
+			Repository repository = JGitRepository.open(gitDir);
+			repositories.put(gitDir, repository);
+			watcher.watch(gitDir);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 

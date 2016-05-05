@@ -24,7 +24,11 @@ public class DefaultConfiguration implements Configuration {
 	}
 
 	private static Path create(Path file) throws IOException {
-		Files.createDirectories(file.getParent());
+		Path parent = file.getParent();
+		if (parent == null) {
+			throw new RuntimeException("Could not get parent of file: " + file);
+		}
+		Files.createDirectories(parent);
 		if (!Files.exists(file)) {
 			Files.createFile(file);
 		}
