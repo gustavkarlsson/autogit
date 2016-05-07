@@ -184,6 +184,14 @@ public class JGitRepositoryTest {
 		assertRepoClean(repo);
 	}
 
+	@Test
+	public void listEmptyReturnsEmptyList() throws Exception {
+		createNewRepo(gitDir, workDir);
+		JGitRepository jGitRepo = JGitRepository.open(gitDir);
+
+		assertThat(jGitRepo.list()).isEmpty();
+	}
+
 	private static Repository createNewRepo(Path gitDir, Path workDir) throws IOException, GitAPIException {
 		return Git.init()
 				.setGitDir(gitDir.toFile())

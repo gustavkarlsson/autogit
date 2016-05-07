@@ -3,12 +3,22 @@ package se.gustavkarlsson.autogit.repository.git;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
+import org.eclipse.jgit.revwalk.RevCommit;
 import se.gustavkarlsson.autogit.repository.*;
+import se.gustavkarlsson.autogit.state.GitCommit;
+import se.gustavkarlsson.autogit.state.State;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -65,6 +75,20 @@ public class JGitRepository implements Repository {
 		try {
 			addAll();
 			commitAll(author);
+		} catch (GitAPIException e) {
+			throw new RepositoryException(e);
+		}
+	}
+
+	@Override
+	public List<State> list() {
+		try {
+			LogCommand log = git.log();
+			Iterable<RevCommit> commits = log.call();
+			Stream<RevCommit> stream = StreamSupport.stream(commits.spliterator(), false);
+			return stream.map(GitCommit::new).collect(Collectors.toList());
+		} catch(NoHeadException e) {
+			return Collections.emptyList();
 		} catch (GitAPIException e) {
 			throw new RepositoryException(e);
 		}
