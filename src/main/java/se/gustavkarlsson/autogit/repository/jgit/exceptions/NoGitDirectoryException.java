@@ -1,4 +1,6 @@
-package se.gustavkarlsson.autogit.repository;
+package se.gustavkarlsson.autogit.repository.jgit.exceptions;
+
+import se.gustavkarlsson.autogit.repository.RepositoryException;
 
 import java.nio.file.Path;
 

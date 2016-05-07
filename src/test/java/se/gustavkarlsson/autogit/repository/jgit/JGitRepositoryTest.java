@@ -1,4 +1,4 @@
-package se.gustavkarlsson.autogit.repository.git;
+package se.gustavkarlsson.autogit.repository.jgit;
 
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CommitCommand;
@@ -15,10 +15,9 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import se.gustavkarlsson.autogit.repository.GitDirectoryInUseException;
-import se.gustavkarlsson.autogit.repository.NoGitDirectoryException;
-import se.gustavkarlsson.autogit.repository.SameGitAndWorkingDirectoryException;
-import se.gustavkarlsson.autogit.state.State;
+import se.gustavkarlsson.autogit.repository.jgit.exceptions.GitDirectoryInUseException;
+import se.gustavkarlsson.autogit.repository.jgit.exceptions.NoGitDirectoryException;
+import se.gustavkarlsson.autogit.repository.jgit.exceptions.SameGitAndWorkingDirectoryException;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -29,8 +28,8 @@ import java.util.List;
 
 import static java.nio.file.Files.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static se.gustavkarlsson.autogit.repository.git.JGitRepository.init;
-import static se.gustavkarlsson.autogit.repository.git.JGitRepository.open;
+import static se.gustavkarlsson.autogit.repository.jgit.JGitRepository.init;
+import static se.gustavkarlsson.autogit.repository.jgit.JGitRepository.open;
 
 public class JGitRepositoryTest {
 
@@ -141,7 +140,7 @@ public class JGitRepositoryTest {
 	}
 
 	@Test(expected = NoGitDirectoryException.class)
-	public void saveWithDeletedGitDirThrowsException() throws Exception {
+	public void saveWithDeletedGitDirThrowsNoGitDirectoryException() throws Exception {
 		createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		deleteRecursive(gitDir);
@@ -150,7 +149,7 @@ public class JGitRepositoryTest {
 	}
 
 	@Test(expected = NoGitDirectoryException.class)
-	public void listWithDeletedGitDirThrowsException() throws Exception {
+	public void listWithDeletedGitDirThrowsNoGitDirectoryException() throws Exception {
 		createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		deleteRecursive(gitDir);
@@ -168,66 +167,66 @@ public class JGitRepositoryTest {
 
 	@Test
 	public void saveNewRepositoryCreatesNoState() throws Exception {
-		Repository jgitRepo = createNewRepo(gitDir, workDir);
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 
 		assertThat(repo.save("user")).isFalse();
-		assertThat(new Git(jgitRepo).reflog().call()).isEmpty();
+		assertThat(new Git(jGitRepo).reflog().call()).isEmpty();
 	}
 
 	@Test
 	public void saveNewFile() throws Exception {
-		Repository jgitRepo = createNewRepo(gitDir, workDir);
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		String fileName = "file.txt";
 		createFile(workDir.resolve(fileName));
 
 		assertThat(repo.save("user")).isTrue();
-		assertThat(getCommitFileContents(jgitRepo, "HEAD", fileName)).isEqualTo(NO_BYTES);
-		assertThat(isRepoClean(jgitRepo)).isTrue();
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName)).isEqualTo(NO_BYTES);
+		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
 	@Test
 	public void saveNewFolder() throws Exception {
-		Repository jgitRepo = createNewRepo(gitDir, workDir);
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		String folderName = "folder";
 		createDirectories(workDir.resolve(folderName));
 
 		assertThat(repo.save("user")).isFalse();
-		assertThat(new Git(jgitRepo).reflog().call()).isEmpty();
-		assertThat(isRepoClean(jgitRepo)).isTrue();
+		assertThat(new Git(jGitRepo).reflog().call()).isEmpty();
+		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
 	@Test
 	public void saveModifiedFile() throws Exception {
-		Repository jgitRepo = createNewRepo(gitDir, workDir);
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		String fileName = "file.txt";
 		Path file = createFile(workDir.resolve(fileName));
-		commitFile(jgitRepo, file);
+		commitFile(jGitRepo, file);
 		byte[] contents = "text".getBytes();
 		write(file, contents);
 
 		assertThat(repo.save("user")).isTrue();
-		assertThat(getCommitFileContents(jgitRepo, "HEAD", fileName)).isEqualTo(contents);
-		assertThat(getCommitFileContents(jgitRepo, "HEAD^1", fileName)).isEqualTo(NO_BYTES);
-		assertThat(isRepoClean(jgitRepo)).isTrue();
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName)).isEqualTo(contents);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD^1", fileName)).isEqualTo(NO_BYTES);
+		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
 	@Test
 	public void saveDeletedFile() throws Exception {
-		Repository jgitRepo = createNewRepo(gitDir, workDir);
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		String fileName = "file.txt";
 		Path file = createFile(workDir.resolve(fileName));
-		commitFile(jgitRepo, file);
+		commitFile(jGitRepo, file);
 		delete(file);
 
 		assertThat(repo.save("user")).isTrue();
-		assertThat(getCommitFileContents(jgitRepo, "HEAD", fileName)).isNull();
-		assertThat(getCommitFileContents(jgitRepo, "HEAD^1", fileName)).isEqualTo(NO_BYTES);
-		assertThat(isRepoClean(jgitRepo)).isTrue();
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName)).isNull();
+		assertThat(getCommitFileContents(jGitRepo, "HEAD^1", fileName)).isEqualTo(NO_BYTES);
+		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
 	@Test
@@ -235,21 +234,29 @@ public class JGitRepositoryTest {
 		createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 
-		List<State> list = repo.list();
+		List<JGitState> list = repo.list();
 
 		assertThat(list).isEmpty();
 	}
 
 	@Test
 	public void listSingleState() throws Exception {
-		Repository jgitRepo = createNewRepo(gitDir, workDir);
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		Path file = gitDir.resolve("file.txt");
-		commitFile(jgitRepo, file);
+		commitFile(jGitRepo, file);
 
-		List<State> list = repo.list();
+		List<JGitState> list = repo.list();
 
 		assertThat(list).hasSize(1);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void revertToNullThrowsNullPointerException() throws Exception {
+		createNewRepo(gitDir, workDir);
+		JGitRepository repo = JGitRepository.open(gitDir);
+
+		repo.revert(null);
 	}
 
 	private static Repository createNewRepo(Path gitDir, Path workDir) throws IOException, GitAPIException {
@@ -260,11 +267,11 @@ public class JGitRepositoryTest {
 				.getRepository();
 	}
 
-	private static void commitFile(Repository jgitRepo, Path file) throws IOException, GitAPIException {
+	private static void commitFile(Repository jGitRepo, Path file) throws IOException, GitAPIException {
 		if (!exists(file)) {
 			createFile(file);
 		}
-		Git git = new Git(jgitRepo);
+		Git git = new Git(jGitRepo);
 		AddCommand add = git.add();
 		add.addFilepattern(file.getFileName().toString());
 		add.call();
@@ -273,18 +280,18 @@ public class JGitRepositoryTest {
 		commit.call();
 	}
 
-	private static boolean isRepoClean(Repository jgitRepo) throws GitAPIException, IOException {
-		return new Git(jgitRepo).status().call().isClean();
+	private static boolean isRepoClean(Repository jGitRepo) throws GitAPIException, IOException {
+		return new Git(jGitRepo).status().call().isClean();
 	}
 
-	private static byte[] getCommitFileContents(Repository jgitRepo, String commitish, String fileName) throws IOException {
-		ObjectId lastCommitId = jgitRepo.resolve(commitish);
+	private static byte[] getCommitFileContents(Repository jGitRepo, String commitish, String fileName) throws IOException {
+		ObjectId lastCommitId = jGitRepo.resolve(commitish);
 
-		try (RevWalk revWalk = new RevWalk(jgitRepo)) {
+		try (RevWalk revWalk = new RevWalk(jGitRepo)) {
 			RevCommit commit = revWalk.parseCommit(lastCommitId);
 			RevTree tree = commit.getTree();
 
-			try (TreeWalk treeWalk = new TreeWalk(jgitRepo)) {
+			try (TreeWalk treeWalk = new TreeWalk(jGitRepo)) {
 				treeWalk.addTree(tree);
 				treeWalk.setRecursive(true);
 				treeWalk.setFilter(PathFilter.create(fileName));
@@ -292,7 +299,7 @@ public class JGitRepositoryTest {
 					return null;
 				}
 				ObjectId objectId = treeWalk.getObjectId(0);
-				ObjectLoader loader = jgitRepo.open(objectId);
+				ObjectLoader loader = jGitRepo.open(objectId);
 
 				byte[] contents = loader.getBytes();
 				revWalk.dispose();

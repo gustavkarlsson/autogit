@@ -1,4 +1,4 @@
-package se.gustavkarlsson.autogit.repository.git;
+package se.gustavkarlsson.autogit.repository.jgit;
 
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CommitCommand;
@@ -8,9 +8,11 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.revwalk.RevCommit;
-import se.gustavkarlsson.autogit.repository.*;
-import se.gustavkarlsson.autogit.state.JGitState;
-import se.gustavkarlsson.autogit.state.State;
+import se.gustavkarlsson.autogit.repository.Repository;
+import se.gustavkarlsson.autogit.repository.RepositoryException;
+import se.gustavkarlsson.autogit.repository.jgit.exceptions.GitDirectoryInUseException;
+import se.gustavkarlsson.autogit.repository.jgit.exceptions.NoGitDirectoryException;
+import se.gustavkarlsson.autogit.repository.jgit.exceptions.SameGitAndWorkingDirectoryException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +25,7 @@ import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class JGitRepository implements Repository {
+public class JGitRepository implements Repository<JGitState> {
 
 	private static final String DEFAULT_MESSAGE = "";
 	private static final String DEFAULT_EMAIL = "";
@@ -55,12 +57,12 @@ public class JGitRepository implements Repository {
 		try {
 			try {
 				Git.open(gitDir.toFile());
-				throw new GitDirectoryInUseException();
-			} catch (IOException e) {
+				throw new GitDirectoryInUseException(gitDir);
+			} catch (RepositoryNotFoundException e) {
 				// Exception expected here.
 			}
 			git = Git.init().setGitDir(gitDir.toFile()).setDirectory(workDir.toFile()).call();
-		} catch (GitAPIException e) {
+		} catch (GitAPIException | IOException e) {
 			throw new RuntimeException(e);
 		} catch (IllegalStateException e) {
 			if (e.getMessage().contains("both folders should not point to the same location")) {
@@ -87,7 +89,7 @@ public class JGitRepository implements Repository {
 	}
 
 	@Override
-	public List<State> list() {
+	public List<JGitState> list() {
 		checkGitDirExists();
 		try {
 			LogCommand log = git.log();
@@ -99,6 +101,12 @@ public class JGitRepository implements Repository {
 		} catch (GitAPIException e) {
 			throw new RepositoryException(e);
 		}
+	}
+
+	@Override
+	public void revert(JGitState state) {
+		checkNotNull(state);
+		throw new UnsupportedOperationException("Not yet implemented!");
 	}
 
 	private void checkGitDirExists() {

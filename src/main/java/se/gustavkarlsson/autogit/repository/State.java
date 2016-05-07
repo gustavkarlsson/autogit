@@ -1,4 +1,4 @@
-package se.gustavkarlsson.autogit.state;
+package se.gustavkarlsson.autogit.repository;
 
 import java.time.Instant;
 import java.util.Date;

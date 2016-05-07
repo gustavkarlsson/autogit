@@ -1,6 +1,7 @@
-package se.gustavkarlsson.autogit.state;
+package se.gustavkarlsson.autogit.repository.jgit;
 
 import org.eclipse.jgit.revwalk.RevCommit;
+import se.gustavkarlsson.autogit.repository.State;
 
 import java.time.Instant;
 

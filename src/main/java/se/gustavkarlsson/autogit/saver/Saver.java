@@ -6,7 +6,7 @@ import se.gustavkarlsson.autogit.file.watcher.FileWatcher;
 import se.gustavkarlsson.autogit.file.watcher.NativeFileWatcher;
 import se.gustavkarlsson.autogit.file.watcher.PathChangedEvent;
 import se.gustavkarlsson.autogit.repository.Repository;
-import se.gustavkarlsson.autogit.repository.git.JGitRepository;
+import se.gustavkarlsson.autogit.repository.jgit.JGitRepository;
 
 import java.io.IOException;
 import java.nio.file.Path;
