@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface Repository {
 
-	void save(String author);
+	boolean save(String author);
 
 	List<State> list();
 }

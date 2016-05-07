@@ -6,6 +6,10 @@ public class RepositoryException extends RuntimeException {
 		super(cause);
 	}
 
+	public RepositoryException(String message) {
+		super(message);
+	}
+
 	public RepositoryException() {
 	}
 }

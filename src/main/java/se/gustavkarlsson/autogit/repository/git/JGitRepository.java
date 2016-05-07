@@ -9,10 +9,11 @@ import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import se.gustavkarlsson.autogit.repository.*;
-import se.gustavkarlsson.autogit.state.GitCommit;
+import se.gustavkarlsson.autogit.state.JGitState;
 import se.gustavkarlsson.autogit.state.State;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -70,27 +71,40 @@ public class JGitRepository implements Repository {
 	}
 
 	@Override
-	public void save(String author) {
+	public boolean save(String author) {
 		checkNotNull(author);
+		checkGitDirExists();
 		try {
-			addAll();
-			commitAll(author);
+			if (!git.status().call().isClean()) {
+				addAll();
+				commitAll(author);
+				return true;
+			}
+		} catch (GitAPIException e) {
+			throw new RepositoryException(e);
+		}
+		return false;
+	}
+
+	@Override
+	public List<State> list() {
+		checkGitDirExists();
+		try {
+			LogCommand log = git.log();
+			Iterable<RevCommit> commits = log.call();
+			Stream<RevCommit> stream = StreamSupport.stream(commits.spliterator(), false);
+			return stream.map(JGitState::new).collect(Collectors.toList());
+		} catch (NoHeadException e) {
+			return Collections.emptyList();
 		} catch (GitAPIException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	@Override
-	public List<State> list() {
-		try {
-			LogCommand log = git.log();
-			Iterable<RevCommit> commits = log.call();
-			Stream<RevCommit> stream = StreamSupport.stream(commits.spliterator(), false);
-			return stream.map(GitCommit::new).collect(Collectors.toList());
-		} catch(NoHeadException e) {
-			return Collections.emptyList();
-		} catch (GitAPIException e) {
-			throw new RepositoryException(e);
+	private void checkGitDirExists() {
+		Path gitDir = git.getRepository().getDirectory().toPath();
+		if (!Files.exists(gitDir) || !Files.isDirectory(gitDir)) {
+			throw new NoGitDirectoryException(gitDir);
 		}
 	}
 
