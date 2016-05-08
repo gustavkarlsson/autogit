@@ -11,7 +11,7 @@ public class JGitState implements State {
 
 	private final RevCommit commit;
 
-	public JGitState(RevCommit commit) {
+	JGitState(RevCommit commit) {
 		this.commit = checkNotNull(commit);
 	}
 

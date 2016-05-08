@@ -27,7 +27,6 @@ import static java.util.stream.StreamSupport.stream;
 
 public class JGitRepository implements Repository<JGitState> {
 
-	public static final String SHA1_HEX = "[0-9a-fA-F]{40}]";
 	private static final String DEFAULT_MESSAGE = "";
 	private static final String DEFAULT_EMAIL = "";
 

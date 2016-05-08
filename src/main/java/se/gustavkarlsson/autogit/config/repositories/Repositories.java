@@ -1,6 +1,5 @@
 package se.gustavkarlsson.autogit.config.repositories;
 
-import java.nio.file.Path;
 import java.util.Set;
 
 public interface Repositories<T> {
