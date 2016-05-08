@@ -1,9 +1,13 @@
 package se.gustavkarlsson.autogit.repository;
 
 import java.time.Instant;
-import java.util.Date;
 
-public interface State {
+public interface State extends Comparable<State> {
 
 	Instant getTime();
+
+	@Override
+	default int compareTo(State o) {
+		return getTime().compareTo(o.getTime());
+	}
 }

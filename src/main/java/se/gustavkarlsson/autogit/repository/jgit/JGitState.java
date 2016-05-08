@@ -23,4 +23,27 @@ public class JGitState implements State {
 	RevCommit getCommit() {
 		return commit;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		JGitState jGitState = (JGitState) o;
+
+		return commit.equals(jGitState.commit);
+
+	}
+
+	@Override
+	public int hashCode() {
+		return commit.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "JGitState{" +
+				"commit=" + commit +
+				'}';
+	}
 }
