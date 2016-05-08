@@ -6,7 +6,7 @@ public interface Repository<T extends State> {
 
 	boolean save(String author);
 
-	List<T> list();
+	List<T> listStates();
 
-	void revert(T state);
+	void load(T state);
 }

@@ -149,12 +149,12 @@ public class JGitRepositoryTest {
 	}
 
 	@Test(expected = NoGitDirectoryException.class)
-	public void listWithDeletedGitDirThrowsNoGitDirectoryException() throws Exception {
+	public void listStatesWithDeletedGitDirThrowsNoGitDirectoryException() throws Exception {
 		createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 		deleteRecursive(gitDir);
 
-		repo.list();
+		repo.listStates();
 	}
 
 	@Test(expected = NullPointerException.class)
@@ -209,8 +209,8 @@ public class JGitRepositoryTest {
 		write(file, contents);
 
 		assertThat(repo.save("user")).isTrue();
+		assertThat(getCommitFileContents(jGitRepo, "HEAD~1", fileName)).isEqualTo(NO_BYTES);
 		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName)).isEqualTo(contents);
-		assertThat(getCommitFileContents(jGitRepo, "HEAD^1", fileName)).isEqualTo(NO_BYTES);
 		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
@@ -224,39 +224,79 @@ public class JGitRepositoryTest {
 		delete(file);
 
 		assertThat(repo.save("user")).isTrue();
+		assertThat(getCommitFileContents(jGitRepo, "HEAD~1", fileName)).isEqualTo(NO_BYTES);
 		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName)).isNull();
-		assertThat(getCommitFileContents(jGitRepo, "HEAD^1", fileName)).isEqualTo(NO_BYTES);
 		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
-	@Test
-	public void listEmpty() throws Exception {
+	@Test(expected = NullPointerException.class)
+	public void loadNullThrowsNullPointerException() throws Exception {
 		createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
 
-		List<JGitState> list = repo.list();
+		repo.load(null);
+	}
+
+	@Test
+	public void listStatesEmpty() throws Exception {
+		createNewRepo(gitDir, workDir);
+		JGitRepository repo = JGitRepository.open(gitDir);
+
+		List<JGitState> list = repo.listStates();
 
 		assertThat(list).isEmpty();
 	}
 
 	@Test
-	public void listSingleState() throws Exception {
+	public void listStatesSingle() throws Exception {
 		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
-		Path file = gitDir.resolve("file.txt");
-		commitFile(jGitRepo, file);
+		String fileName = "file.txt";
+		commitFile(jGitRepo, workDir.resolve(fileName));
 
-		List<JGitState> list = repo.list();
+		List<JGitState> list = repo.listStates();
 
 		assertThat(list).hasSize(1);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName)).isEqualTo(NO_BYTES);
+		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
-	@Test(expected = NullPointerException.class)
-	public void revertToNullThrowsNullPointerException() throws Exception {
-		createNewRepo(gitDir, workDir);
+	@Test
+	public void listStatesTwo() throws Exception {
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
 		JGitRepository repo = JGitRepository.open(gitDir);
+		String fileName1 = "file1.txt";
+		String fileName2 = "file2.txt";
+		commitFile(jGitRepo, workDir.resolve(fileName1));
+		commitFile(jGitRepo, workDir.resolve(fileName2));
 
-		repo.revert(null);
+		List<JGitState> list = repo.listStates();
+
+		assertThat(list).hasSize(2);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD~1", fileName1)).isEqualTo(NO_BYTES);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName2)).isEqualTo(NO_BYTES);
+		assertThat(isRepoClean(jGitRepo)).isTrue();
+	}
+
+	@Test
+	public void listStatesBranched() throws Exception {
+		Repository jGitRepo = createNewRepo(gitDir, workDir);
+		JGitRepository repo = JGitRepository.open(gitDir);
+		String fileName1 = "file1.txt";
+		String fileName2 = "file2.txt";
+		String fileName3 = "file3.txt";
+		commitFile(jGitRepo, workDir.resolve(fileName1));
+		commitFile(jGitRepo, workDir.resolve(fileName2));
+		repo.load(repo.listStates().get(1));
+		commitFile(jGitRepo, workDir.resolve(fileName3));
+
+		List<JGitState> list = repo.listStates();
+
+		assertThat(list).hasSize(3);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD~1", fileName1)).isEqualTo(NO_BYTES);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName3)).isEqualTo(NO_BYTES);
+		assertThat(getCommitFileContents(jGitRepo, "HEAD", fileName2)).isEqualTo(null);
+		assertThat(isRepoClean(jGitRepo)).isTrue();
 	}
 
 	private static Repository createNewRepo(Path gitDir, Path workDir) throws IOException, GitAPIException {

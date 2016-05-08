@@ -19,4 +19,8 @@ public class JGitState implements State {
 	public Instant getTime() {
 		return Instant.ofEpochSecond(commit.getCommitTime());
 	}
+
+	RevCommit getCommit() {
+		return commit;
+	}
 }
