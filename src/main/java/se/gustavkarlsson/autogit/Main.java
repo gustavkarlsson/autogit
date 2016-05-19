@@ -16,5 +16,16 @@ public class Main {
 		JGitRepositorySaver saver = new JGitRepositorySaver(config.getUserName());
 		Repositories<Path> repositories = config.getRepositories();
 		repositories.get().forEach(saver::register);
+
+		Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") {
+			@Override
+			public void run() {
+				try {
+					saver.close();
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to close saver", e);
+				}
+			}
+		});
 	}
 }

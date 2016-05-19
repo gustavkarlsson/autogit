@@ -2,7 +2,6 @@ package se.gustavkarlsson.autogit.saver;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import se.gustavkarlsson.autogit.file.watcher.FileWatcher;
 import se.gustavkarlsson.autogit.file.watcher.NativeFileWatcher;
 import se.gustavkarlsson.autogit.file.watcher.PathChangedEvent;
 import se.gustavkarlsson.autogit.repository.Repository;
@@ -16,11 +15,11 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class JGitRepositorySaver {
+public class JGitRepositorySaver implements AutoCloseable {
 
 	private final Map<Path, Repository<JGitState>> repositories = new HashMap<>();
 
-	private final FileWatcher watcher;
+	private final NativeFileWatcher watcher;
 	private final String author;
 
 	public JGitRepositorySaver(String author) throws IOException {
@@ -30,14 +29,19 @@ public class JGitRepositorySaver {
 		this.author = checkNotNull(author);
 	}
 
-	public void register(Path gitDir) {
+	public boolean register(Path gitDir) {
 		try {
 			Repository<JGitState> repository = JGitRepository.open(gitDir);
 			repositories.put(gitDir, repository);
-			watcher.watch(gitDir);
+			return watcher.watch(gitDir);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public boolean unregister(Path gitDir) {
+		repositories.remove(gitDir);
+		return watcher.unwatch(gitDir);
 	}
 
 	@Subscribe
@@ -47,4 +51,8 @@ public class JGitRepositorySaver {
 		repository.save(author);
 	}
 
+	@Override
+	public void close() throws Exception {
+		watcher.close();
+	}
 }
