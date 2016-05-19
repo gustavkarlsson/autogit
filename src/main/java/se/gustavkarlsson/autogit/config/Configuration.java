@@ -1,11 +1,12 @@
 package se.gustavkarlsson.autogit.config;
 
-import java.io.IOException;
-import java.nio.file.Path;
+import se.gustavkarlsson.autogit.config.repositories.Repositories;
 
-public interface Configuration {
+import java.io.IOException;
+
+public interface Configuration<T> {
 
 	String getUserName();
 
-	Path getRepositoriesFile() throws IOException;
+	Repositories<T> getRepositories() throws IOException;
 }
