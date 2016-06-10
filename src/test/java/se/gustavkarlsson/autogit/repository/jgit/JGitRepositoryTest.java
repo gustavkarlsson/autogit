@@ -12,9 +12,10 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import se.gustavkarlsson.autogit.repository.jgit.exceptions.GitDirectoryInUseException;
 import se.gustavkarlsson.autogit.repository.jgit.exceptions.NoGitDirectoryException;
 import se.gustavkarlsson.autogit.repository.jgit.exceptions.SameGitAndWorkingDirectoryException;
@@ -22,6 +23,7 @@ import se.gustavkarlsson.autogit.repository.jgit.exceptions.SameGitAndWorkingDir
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
@@ -33,6 +35,9 @@ import static se.gustavkarlsson.autogit.repository.jgit.JGitRepository.open;
 
 public class JGitRepositoryTest {
 
+	@Rule
+	public TemporaryFolder root = new TemporaryFolder();
+
 	public static final byte[] NO_BYTES = new byte[0];
 
 	private Path tempDir;
@@ -41,14 +46,9 @@ public class JGitRepositoryTest {
 
 	@Before
 	public void setUp() throws Exception {
-		tempDir = createTempDirectory(null);
+		tempDir = Paths.get(root.newFolder().getAbsolutePath());
 		gitDir = tempDir.resolve(".git");
 		workDir = tempDir.resolve("work");
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		deleteRecursive(tempDir);
 	}
 
 	@Test(expected = NullPointerException.class)
